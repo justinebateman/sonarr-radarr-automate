@@ -1,3 +1,4 @@
+#! python3
 import os
 import sys
 import logging
@@ -10,11 +11,11 @@ from tvdb_mp4 import Tvdb_mp4
 from mkvtomp4 import MkvtoMp4
 from post_processor import PostProcessor
 from logging.config import fileConfig
+import datetime
 from firebase_utils import firebase_message, firebase_initialise
 
 firebase_initialise.initialise_admin()
-
-#firebase_message.send_firebase("Sonarr - Episode converting","Mp4 file conversion started for Test.")
+category = "tv"
 
 logpath = 'C:\Tools\sonarr-radarr-automate\sickbeard_mp4\logs'
 
@@ -45,7 +46,11 @@ tvdb_id = int(os.environ.get('sonarr_series_tvdbid'))
 season = int(os.environ.get('sonarr_episodefile_seasonnumber'))
 
 # send notification
-firebase_message.send_firebase("Sonarr - Episode converting","Mp4 file conversion started for %s." % original)
+title = "Sonarr - Episode converting"
+body = "Mp4 file conversion started for %s." % original
+date_time = datetime.datetime.now()
+startNotification = firebase_message.Notification(title, body, category, date_time)
+firebase_message.send_and_save(startNotification)
 
 try:
     episode = int(os.environ.get('sonarr_episodefile_episodenumbers'))
@@ -167,6 +172,10 @@ if MkvtoMp4(settings).validSource(inputfile):
         plex.refreshPlex(settings, 'show', log)
 
 # send notification
+title = "Sonarr - Episode finished converting"
+body = "Mp4 file conversion finished for %s." % original
+date_time = datetime.datetime.now()
+endNotification = firebase_message.Notification(title, body, category, date_time)
+firebase_message.send_and_save(endNotification)
 
-firebase_message.send_firebase("Sonarr - Episode finished converting","Mp4 file conversion finished for %s." % original)
 sys.exit(0)

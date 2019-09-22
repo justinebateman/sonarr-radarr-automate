@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#! python3
 import os
 import sys
 import logging
@@ -11,9 +11,11 @@ from post_processor import PostProcessor
 from logging.config import fileConfig
 import time
 import requests
+import datetime
 from firebase_utils import firebase_message, firebase_initialise
 
 firebase_initialise.initialise_admin()
+category = "movie"
 
 logpath = 'C:\Tools\sonarr-radarr-automate\sickbeard_mp4\logs'
 
@@ -49,7 +51,11 @@ log.debug("Original name: %s." % original)
 log.debug("IMDB ID: %s." % imdbid)
 
 # Send notification
-firebase_message.send_firebase("Radarr - Movie converting","Mp4 file conversion started for %s." % original)
+title = "Radarr - Movie converting"
+body = "Mp4 file conversion started for %s." % original
+date_time = datetime.datetime.now()
+startNotification = firebase_message.Notification(title, body, category, date_time)
+firebase_message.send_and_save(startNotification)
 
 if MkvtoMp4(settings).validSource(inputfile):
     log.info("Processing %s." % inputfile)
@@ -158,7 +164,11 @@ if MkvtoMp4(settings).validSource(inputfile):
         url = protocol + host + ":" + port + webroot + "/api/command"
         r = requests.post(url, json=payload, headers=headers)
 
-# send notification
-firebase_message.send_firebase("Radarr - Movie finished converting","Mp4 file finished converting for %s." % original)
+# Send notification
+title = "Radarr - Movie finished converting"
+body = "Mp4 file finished converting started for %s." % original
+date_time = datetime.datetime.now()
+endNotification = firebase_message.Notification(title, body, category, date_time)
+firebase_message.send_and_save(endNotification)
 
 sys.exit(0)
